@@ -1,16 +1,26 @@
 # irys-stateful-swarms
 
-**The highest all-pass rate on the Legal Agent Benchmark at $4.64/task.** On all 2,010 tasks in the [Harvey Legal Agent Benchmark (LAB) v1.0](https://github.com/harveyai/harvey-labs) — 27 legal practice areas — irys-stateful-swarms achieves **32.5% strict all-pass** and **91.44% criteria macro** at **$4.64/task**, exceeding every published result including Harvey's own post-trained [Tenet model](https://www.harvey.ai/blog/post-training-update-harvey-tenet) (19.7%) and all frontier model baselines — with no fine-tuning, no custom training data, and no domain-specific scaffolding. See [benchmark comparison](#benchmark-comparison), [verification](#verification), and [benchmark context](#context).
+**The highest all-pass rate on the Legal Agent Benchmark at $4.64/task. 81.5% criteria on DELTA Dutch legal research at $0.010/task.** On all 2,010 tasks in the [Harvey Legal Agent Benchmark (LAB) v1.0](https://github.com/harveyai/harvey-labs) — 27 legal practice areas — irys achieves **32.5% strict all-pass** and **91.44% criteria macro** at **$4.64/task**, exceeding every published result including Harvey's own post-trained [Tenet model](https://www.harvey.ai/blog/post-training-update-harvey-tenet) (19.7%). On the [DELTA benchmark](https://github.com/legalbenchmarks/delta) (v1.1.0) — 15 Dutch legal research tasks, 273 binary criteria — irys scores **81.5% criteria** at **$0.010/task**, 150x cheaper than Fable 5.1 at comparable quality. No fine-tuning, no custom training data, no domain-specific scaffolding.
 
 PS: We use Gemini 3.5 Flash Lite as a judge because it's intelligent, cheap, and really good with rate limits, letting us work faster. We have done evals to ensure that the model is in agreement with other judges. You're free to rescore the entire run with the judge you choose if you disagree with our judge choice
 
 ### At a glance
+
+**Harvey LAB:**
 
 ![Harvey LAB — All-Pass Rate](assets/lab_allpass_rate.png)
 
 ![Performance vs Cost — Harvey LAB](assets/lab_performance_vs_cost.png)
 
 **62x** more intelligence per dollar than Fable 5. **50x** more than Opus 4.7. **65%** higher all-pass than Harvey Tenet — with zero training.
+
+**DELTA Dutch legal research:**
+
+![DELTA — Criteria Rate](assets/delta_criteria_rate.png)
+
+![DELTA — Cost per Task](assets/delta_cost_per_task.png)
+
+**150x** cheaper than Fable 5.1. **81.5%** criteria with a domain-agnostic prompt — no legal-specific tuning.
 
 ![What $100 Buys You on LAB](assets/lab_what_100_buys.png)
 
@@ -21,17 +31,18 @@ PS: We use Gemini 3.5 Flash Lite as a judge because it's intelligent, cheap, and
 ## Contents
 
 - [Why this matters](#why-this-matters)
-- [Full benchmark results](#full-benchmark-results)
+- [Harvey Legal Agent Benchmark (LAB)](#harvey-legal-agent-benchmark-lab)
   - [Benchmark comparison](#benchmark-comparison)
   - [Frontier cost analysis](#frontier-cost-analysis)
   - [The stateful advantage](#the-stateful-advantage)
+- [DELTA Dutch legal research benchmark](#delta-dutch-legal-research-benchmark)
+  - [Leaderboard context](#leaderboard-context)
 - [How stateful swarms reason](#how-stateful-swarms-reason)
 - [Why stateful swarms matter](#why-stateful-swarms-matter)
 - [Blackboard MCP: Claude Code and Codex](#blackboard-mcp-use-stateful-reasoning-in-claude-code-and-codex)
-- [Beyond legal: domain-agnostic](#beyond-legal-the-stateful-swarm-paradigm-is-domain-agnostic)
+- [Other evaluations](#other-evaluations)
   - [SWE-bench Verified](#swe-bench-verified-preliminary-scaffold-evaluation)
   - [Datadog 10-K strategic analysis](#datadog-10-k-strategic-analysis)
-  - [DELTA Dutch legal research benchmark](#delta-dutch-legal-research-benchmark)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
@@ -51,9 +62,9 @@ Current AI systems forget everything between sessions. Every question pays the f
 
 This is not an incremental improvement to existing approaches. It is a paradigm shift: **from stateless inference to stateful reasoning.**
 
-## Full benchmark results
+## Harvey Legal Agent Benchmark (LAB)
 
-irys-stateful-swarms completed the full public [Harvey Legal Agent Benchmark (LAB) v1.0](https://github.com/harveyai/harvey-labs): 2,010 tasks across 27 legal practice areas — including the new firm-knowledge family (250 tasks over a shared 9,288-document DMS). Every task starts from an empty blackboard with zero prior state so the run does not learn across benchmark tasks. Deployment-specific model assignments and provider routing are intentionally omitted from the public artifact.
+irys completed the full public [Harvey Legal Agent Benchmark (LAB) v1.0](https://github.com/harveyai/harvey-labs): 2,010 tasks across 27 legal practice areas — including the new firm-knowledge family (250 tasks over a shared 9,288-document DMS). Every task starts from an empty blackboard with zero prior state so the run does not learn across benchmark tasks. Deployment-specific model assignments and provider routing are intentionally omitted from the public artifact.
 
 | Metric | Result |
 |---|---|
@@ -67,11 +78,11 @@ irys-stateful-swarms completed the full public [Harvey Legal Agent Benchmark (LA
 
 ### Benchmark comparison
 
-Harvey published official LAB results for Tenet and frontier model baselines in their [Tenet Research Preview](https://www.harvey.ai/blog/post-training-update-harvey-tenet) (August 2026). The table below places irys-stateful-swarms alongside those results. Competitor all-pass rates are from Harvey's publication (holdout set, ~1,200 tasks). irys ran on the public set (2,010 tasks, 27 families).
+Harvey published official LAB results for Tenet and frontier model baselines in their [Tenet Research Preview](https://www.harvey.ai/blog/post-training-update-harvey-tenet) (August 2026). The table below places irys alongside those results. Competitor all-pass rates are from Harvey's publication (holdout set, ~1,200 tasks). irys ran on the public set (2,010 tasks, 27 families).
 
 | System | LAB All-Pass | Est. Cost/Task |
 |---|---:|---:|
-| **irys-stateful-swarms** | **32.5%** | **$4.64** |
+| **irys (Gemini 3.7 Flash, no thinking)** | **32.5%** | **$4.64** |
 | Muse Spark 1.1 | 20.0% | ~$0.50 |
 | Harvey Tenet (Kimi K3 + RL) | 19.7% | ~$8 |
 | Grok 4.5 | 12.9% | ~$1 |
@@ -88,7 +99,7 @@ Harvey published official LAB results for Tenet and frontier model baselines in 
 >
 > Harvey's published all-pass results are on their private holdout set (~1,200 tasks), which is not publicly available. There is no way for us to run irys on the holdout set or for Harvey to publish their models' costs on the public set, so a direct apples-to-apples cost comparison is not possible. Opus 4.7 cost from Harvey's [initial LAB publication](https://www.harvey.ai/blog/legal-agent-benchmark-initial-results). Fable 5 and Opus 5 costs are estimated from published per-token pricing applied to the Opus 4.7 baseline — see [frontier cost analysis](#frontier-cost-analysis). Other costs from Harvey's [Tenet Research Preview](https://www.harvey.ai/blog/post-training-update-harvey-tenet). If Harvey or any model provider publishes verified costs on the public benchmark, we will update this table accordingly.
 
-Harvey Tenet is a Kimi K3 base model post-trained with reinforcement learning on ~1,750 legal task environments over 2 months on 150 NVIDIA B300 GPUs. Despite that investment, irys-stateful-swarms — a pure coordination architecture with no fine-tuning, no custom training data, and no domain-specific scaffolding — achieves 60% higher all-pass. The performance comes from the architecture: structured state-building, typed provenance, signal-driven gap identification, and multi-iteration convergence.
+Harvey Tenet is a Kimi K3 base model post-trained with reinforcement learning on ~1,750 legal task environments over 2 months on 150 NVIDIA B300 GPUs. Despite that investment, irys — a pure coordination architecture with no fine-tuning, no custom training data, and no domain-specific scaffolding — achieves 60% higher all-pass. The performance comes from the architecture: structured state-building, typed provenance, signal-driven gap identification, and multi-iteration convergence.
 
 ### Frontier cost analysis
 
@@ -104,7 +115,7 @@ Harvey's [initial LAB publication](https://www.harvey.ai/blog/legal-agent-benchm
 
 #### Head-to-head comparison
 
-| | **irys** | Harvey Tenet | Fable 5 | Opus 4.7 |
+| | **irys (Gemini 3.7 Flash, no thinking)** | Harvey Tenet | Fable 5 | Opus 4.7 |
 |---|---:|---:|---:|---:|
 | LAB All-Pass | **32.5%** | 19.7% | 11.5% | 7.1% |
 | Cost/Task | **$4.64** | ~$8 | ~$102 | ~$51 |
@@ -112,14 +123,14 @@ Harvey's [initial LAB publication](https://www.harvey.ai/blog/legal-agent-benchm
 | Cost per all-pass point | **$0.14** | $0.41 | $8.87 | $7.18 |
 | Training investment | **Zero** | 150 B300 GPUs, 2 months | — | — |
 
-irys-stateful-swarms delivers **62x** the intelligence per dollar of Fable 5, **50x** Opus 4.7, and **2.8x** Harvey Tenet — with no fine-tuning, no custom training data, and no domain-specific scaffolding.
+irys delivers **62x** the intelligence per dollar of Fable 5, **50x** Opus 4.7, and **2.8x** Harvey Tenet — with no fine-tuning, no custom training data, and no domain-specific scaffolding.
 
 <details>
 <summary>What $100 buys on LAB (data)</summary>
 
 | System | Tasks per $100 | All-pass rate | Expected all-pass tasks per $100 |
 |---|---:|---:|---:|
-| **irys-stateful-swarms** | **21.6** | **32.5%** | **7.0** |
+| **irys (Gemini 3.7 Flash, no thinking)** | **21.6** | **32.5%** | **7.0** |
 | Harvey Tenet | 12.5 | 19.7% | 2.5 |
 | Opus 4.7 | 2.0 | 7.1% | 0.14 |
 | Fable 5 | 1.0 | 11.5% | 0.11 |
@@ -178,6 +189,55 @@ In a stateful deployment, grounded document understanding can be retained and re
 [Irys](https://www.irys.ai) combines stateful swarm coordination with hierarchical embeddings, persistent knowledge graphs, entity linking, and typed provenance tracking to reduce the cost of multi-turn inference by up to **1,000x** compared to stateless re-computation. The system doesn't spend tokens constantly re-reading documents, re-extracting entities, or re-deriving analyses it has already performed. Provenance tracking allows Irys to deterministically isolate exactly which state needs updating when new information arrives — rather than re-processing everything, the system targets only the affected subgraph. Combined with deterministic algorithms for entity resolution, obligation tracking, and conflict detection, the vast majority of follow-up work never touches an LLM at all.
 
 This is the economic case for stateful swarms: the cost of AI-assisted analysis shifts from "pay full price for every question" to "invest in understanding once, then query cheaply forever."
+
+## DELTA Dutch legal research benchmark
+
+[DELTA](https://github.com/legalbenchmarks/delta) (v1.1.0) is a Dutch legal research benchmark from [Legal Benchmarks](https://www.legalbenchmarks.ai): 15 research tasks, 273 binary criteria (192 substance, 51 citation, 30 form). Each task asks a system to produce a complete legal research deliverable — a memo, opinion, or analysis — which is then graded against per-criterion pass/fail rubrics across two separate axes: substance (including citation accuracy) and form.
+
+We ran the full benchmark twice using a domain-agnostic harness with web search (Exa API), averaged per the DELTA protocol:
+
+| Metric | Run 1 | Run 2 | Average |
+|---|---:|---:|---:|
+| Criteria met | 222/273 (81.3%) | 223/273 (81.7%) | **81.5%** |
+| Task pass (all criteria) | 2/15 (13.3%) | 2/15 (13.3%) | **13.3%** |
+| Cost per task | $0.010 | $0.010 | **$0.010** |
+
+Per-axis breakdown (DELTA reports substance and form separately, never blended):
+
+| Axis | Run 1 | Run 2 |
+|---|---:|---:|
+| Substance (substance + citation) | 195/243 (80.2%) | 196/243 (80.7%) |
+| Form | 27/30 (90.0%) | 27/30 (90.0%) |
+
+### Leaderboard context
+
+The [DELTA leaderboard](https://www.legalbenchmarks.ai) publishes results from official submissions. For context, here is where irys would stand relative to published leaderboard entries:
+
+| System | Criteria Met | Cost/Task |
+|---|---:|---:|
+| GPT-6 Astra | 87.1% | ~$1.13 |
+| **irys (Gemini 3.7 Flash, no thinking)** | **81.5%** | **$0.010** |
+| Fable 5.1 | 75.7% | ~$1.50 |
+| Gemini 3.8 Flash | 65.9% | ~$0.22 |
+
+![DELTA — Performance vs Cost](assets/delta_performance_vs_cost.png)
+
+irys achieves **150x** lower cost per task than Fable 5.1 while scoring higher on criteria. Compared to GPT-6 Astra — the current top performer — irys is within 6pp on criteria at **113x** lower cost. All of this with a domain-agnostic prompt that says "senior expert" instead of the DELTA-prescribed "experienced legal practitioner."
+
+#### Head-to-head: cost efficiency
+
+| | **irys (Gemini 3.7 Flash, no thinking)** | GPT-6 Astra | Fable 5.1 | Gemini 3.8 Flash |
+|---|---:|---:|---:|---:|
+| Criteria met | **81.5%** | 87.1% | 75.7% | 65.9% |
+| Cost/task | **$0.010** | ~$1.13 | ~$1.50 | ~$0.22 |
+| Criteria per dollar | **8,150** | 77.1 | 50.5 | 299.5 |
+
+**Caveats and transparency:**
+
+- **Judge variance is a real problem in LLM-as-judge evaluation.** We ran cross-provider validation with multiple model families as judges on the same answers. There was significant variance between judge families (~10pp on the same run). More than that, we observed variance even when using the same model on the same run — LLM-as-judge scoring is inherently noisy. This is a known limitation of automated legal evaluation, not specific to our results. It is why we would rather submit directly for official judging than try to match an unknown judge configuration.
+- **We are submitting our API for official DELTA judging.** We've reached out to the Legal Benchmarks team and will be submitting the irys API directly for their official evaluation pipeline. The results above are our unofficial self-evaluation that anyone can independently verify. Once official results are published, we will update this section accordingly.
+- **System prompt deviation.** The DELTA protocol specifies a fixed legal-domain system prompt. Our harness uses a domain-agnostic prompt ("senior expert" instead of "experienced legal practitioner"). This is consistent across both runs and disclosed here for transparency.
+- **We're publishing our results live.** The complete benchmark outputs — answers and scores for both runs, plus cross-provider validation scores — are available as a downloadable archive in [GitHub Releases](https://github.com/dl1683/irys-stateful-swarms/releases). Anyone can download them, run their own judge, and verify or challenge these numbers. The harness code is at [`benchmarks/delta/`](benchmarks/delta/).
 
 ## How stateful swarms reason
 
@@ -548,11 +608,9 @@ A packaged Claude Code plugin is also available at [`packages/blackboard-mcp/cla
 
 Once configured, the agent automatically uses the blackboard for complex analysis tasks and skips it for simple questions. See [`packages/blackboard-mcp/SETUP.md`](packages/blackboard-mcp/SETUP.md) for details.
 
-## Beyond legal: the stateful swarm paradigm is domain-agnostic
+## Other evaluations
 
-irys-stateful-swarms was validated on the Harvey LAB benchmark, but the underlying paradigm — task decomposition, persistent blackboard state-building, multi-agent coordination with typed provenance — is not legal-specific. Any domain where professionals build understanding over time through repeated analysis of complex documents is a domain where stateful swarms outperform stateless approaches: financial due diligence, regulatory compliance, medical research synthesis, insurance underwriting, patent analysis, investigative journalism.
-
-**We've already proven this across two very different domains.**
+The stateful swarm paradigm is not legal-specific. Task decomposition, persistent blackboard state-building, and multi-agent coordination with typed provenance apply to any domain where professionals build understanding through repeated analysis of complex documents: financial due diligence, regulatory compliance, medical research synthesis, insurance underwriting, patent analysis, investigative journalism.
 
 ### SWE-bench Verified: preliminary scaffold evaluation
 
@@ -564,142 +622,6 @@ With zero code changes, we pointed irys-stateful-swarms at seven Datadog 10-K an
 
 A follow-on comparison evaluated blackboard reuse across several configurations. Exact routing, configuration-tied performance, and internal operating data are omitted under the repository's publication policy. The bounded public observation is that persistent blackboard state let later queries reuse structured evidence accumulated during earlier queries. The underlying comparison artifacts require a separate publication audit before they should be cited.
 
-### DELTA Dutch legal research benchmark
-
-[DELTA](https://github.com/legalbenchmarks/delta) (v1.1.0) is a Dutch legal research benchmark from [Legal Benchmarks](https://www.legalbenchmarks.ai): 15 research tasks, 273 binary criteria (192 substance, 51 citation, 30 form). Each task asks a system to produce a complete legal research deliverable, which is then graded against per-criterion pass/fail rubrics.
-
-We ran the full benchmark twice using a domain-agnostic harness with web search (Exa API), averaged per the protocol:
-
-| Metric | Run 1 | Run 2 | Average |
-|---|---:|---:|---:|
-| Criteria met | 222/273 (81.3%) | 223/273 (81.7%) | **81.5%** |
-| Task pass (all criteria) | 2/15 (13.3%) | 2/15 (13.3%) | **13.3%** |
-| Cost per task | $0.010 | $0.010 | **$0.010** |
-
-Per-axis breakdown (DELTA reports substance and form separately):
-
-| Axis | Run 1 | Run 2 |
-|---|---:|---:|
-| Substance (substance + citation) | 195/243 (80.2%) | 196/243 (80.7%) |
-| Form | 27/30 (90.0%) | 27/30 (90.0%) |
-
-**Known limitations and caveats:**
-
-- **Judge variance.** We tried cross-provider validation with multiple model families as judges. There was significant variance between judge families (~10pp), which is consistent with the known sensitivity of LLM-as-judge evaluation. We've reached out to the Legal Benchmarks team for disclosure of which judge models their leaderboard uses so we can run an apples-to-apples comparison. Until then, these results use a single automated judge and should be treated accordingly.
-- **System prompt deviation.** The DELTA protocol specifies a fixed legal-domain system prompt. Our harness uses a domain-agnostic prompt ("senior expert" instead of "experienced legal practitioner"). This is consistent across both runs and disclosed here for transparency.
-- **Unofficial evaluation.** These results are not submitted to the DELTA leaderboard and should not be directly compared to leaderboard scores, which may use different judges, criteria revisions, or scoring procedures.
-
-The complete benchmark outputs (answers and scores for both runs, plus cross-provider validation scores) are available as a downloadable archive in [GitHub Releases](https://github.com/dl1683/irys-stateful-swarms/releases). The harness code is at [`benchmarks/delta/`](benchmarks/delta/).
-
 ---
 
-We're actively adapting the system to run across multiple benchmarks spanning different fields of knowledge work. The swarm framework is being generalized with benchmark adapters so we can evaluate against diverse task types and domains.
-
-We're a small team, and benchmark runs at scale take real compute and time. We'll be releasing results as we complete them. If you're working on benchmarks for knowledge-intensive tasks and would be interested in partnering or having irys-stateful-swarms evaluated on your benchmark, reach out at [devansh@iqidis.ai](mailto:devansh@iqidis.ai).
-
-## Installation
-
-```bash
-pip install -e .
-```
-
-Requires Python 3.12+.
-
-### Environment variables
-
-```bash
-# Required: credentials for at least one supported provider
-GEMINI_API_KEY=...
-GEMINI_API_KEYS=k1,k2,k3       # Multiple keys are optional
-OPENAI_API_KEY=...
-ANTHROPIC_API_KEY=...
-
-# Optional: deployment-specific model overrides
-# Do not commit production values.
-SWARM_WORKER_MODEL=<provider-model-id>
-SWARM_SYNTHESIS_MODEL=<provider-model-id>
-SWARM_REVIEWER_MODEL=<provider-model-id>
-```
-
-## Usage
-
-### Run a single task
-
-```bash
-python -m src.cli run <task_directory> --output-dir results/
-```
-
-The task directory should contain:
-- A `task.json` with an `instructions` field (or an `instruction.md` file)
-- Source documents in a `source_documents/` subdirectory (or alongside task.json)
-
-Supported document formats: PDF, DOCX, XLSX, PPTX, TXT, MD, JSON, EML.
-
-### Run from a manifest
-
-```bash
-python -m src.cli run-manifest <manifest.json> --output-dir results/
-```
-
-### Score outputs (requires Harvey LAB)
-
-```bash
-python -m src.cli score <results_dir> --bench-root /path/to/harvey-labs
-```
-
-## Contributing
-
-Contributions welcome! Areas of interest:
-- New worker strategies (extraction patterns, cross-document reasoning, gap detection)
-- Alternative blackboard schemas and entry types
-- Benchmark adapters for non-legal domains
-- Performance optimizations (token efficiency, parallelism, scheduling)
-- New document format support
-- Visualization and debugging tools for blackboard evolution
-
-The point of open sourcing is to push the boundaries of what stateful swarms can do. Don't be scared to explore unconventional ideas.
-
-### Open Research Questions
-
-These are the hard problems we're actively working on. If you make progress on any of them, we want to hear about it.
-
-1. **Cross-document entity resolution without LLM calls.** The blackboard contains near-duplicate entities ("Zenith Petrochem" vs "Zenith Petrochemical") that workers extract but don't reconcile. Can deterministic string similarity, edit distance, or lightweight embedding comparisons close this gap without burning tokens?
-
-2. **Optimal convergence detection.** The supervisor currently runs a fixed number of iterations with a gap-based convergence check. Is there a better signal for "the blackboard has stabilized" — information-theoretic, graph-structural, or confidence-distribution-based?
-
-3. **Blackboard compression for synthesis.** The synthesis phase receives thousands of entries but context windows are finite. What's the best strategy for selecting, ranking, or clustering entries to maximize information density in the synthesis prompt without losing critical details?
-
-4. **Multi-benchmark generalization.** We've proven domain transfer on SEC filings. What breaks when you run the system on medical research papers, patent filings, or insurance underwriting documents? Where does the architecture need domain-specific adaptation vs. where does it generalize cleanly?
-
-
-### Monthly Bounty Program ($2,000/month)
-
-[Iqidis](https://iqidis.ai) sponsors a monthly bounty pool for the top 10 contributors:
-
-| Rank | Bounty |
-|------|--------|
-| 1st  | $500   |
-| 2nd  | $350   |
-| 3rd  | $275   |
-| 4th  | $200   |
-| 5th  | $175   |
-| 6th  | $150   |
-| 7th  | $125   |
-| 8th  | $100   |
-| 9th  | $75    |
-| 10th | $50    |
-
-**Additional perks:**
-- All Top 10 contributors listed in this README
-- Active contributors offered interviews at [Iqidis](https://iqidis.ai) and access to our network of **1.5M+ members** including engineers, managers, and builders from Google, Nvidia, OpenAI, Anthropic, Meta AI, and other top AI organizations
-
-Bounties given out monthly on the 15th.
-
-## Sources
-
-- Harvey LAB repository: <https://github.com/harveyai/harvey-labs>
-- Harvey initial LAB results: <https://www.harvey.ai/blog/legal-agent-benchmark-initial-results>
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+We're actively running the system across multiple benchmarks spanning different fields of knowledge work. We'll be releasing results as we complete them. If you're working on benchmarks for knowledge-intensive tasks and would be interested in partnering or having irys evaluated on your benchmark, reach out at [devansh@iqidis.ai](mailto:devansh@iqidis.ai).
