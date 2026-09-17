@@ -192,40 +192,41 @@ This is the economic case for stateful swarms: the cost of AI-assisted analysis 
 
 [DELTA](https://github.com/legalbenchmarks/delta) (v1.1.0) is a Dutch legal research benchmark from [Legal Benchmarks](https://www.legalbenchmarks.ai): 15 research tasks, 273 binary criteria (192 substance, 51 citation, 30 form). Each task asks a system to produce a complete legal research deliverable — a memo, opinion, or analysis — which is then graded against per-criterion pass/fail rubrics across two separate axes: substance (including citation accuracy) and form.
 
-We ran the full benchmark twice using a domain-agnostic harness with web search (Exa API), averaged per the DELTA protocol:
+We ran the full benchmark twice using a domain-agnostic harness with web search (Exa API), scored with GPT-5.6 Sol (the same judge model used in the official DELTA evaluation pipeline), and averaged per the DELTA protocol:
 
 | Metric | Run 1 | Run 2 | Average |
 |---|---:|---:|---:|
-| Criteria met | 222/273 (81.3%) | 223/273 (81.7%) | **81.5%** |
-| Task pass (all criteria) | 2/15 (13.3%) | 2/15 (13.3%) | **13.3%** |
+| Criteria met | 201/273 (73.6%) | 212/273 (77.7%) | **75.6%** |
+| Task pass (all criteria) | 1/15 (6.7%) | 2/15 (13.3%) | **10.0%** |
 | Cost per task | $0.010 | $0.010 | **$0.010** |
 
 Per-axis breakdown (DELTA reports substance and form separately, never blended):
 
 | Axis | Run 1 | Run 2 |
 |---|---:|---:|
-| Substance (substance + citation) | 195/243 (80.2%) | 196/243 (80.7%) |
-| Form | 27/30 (90.0%) | 27/30 (90.0%) |
+| Substance (substance + citation) | 180/243 (74.1%) | 189/243 (77.8%) |
+| Form | 21/30 (70.0%) | 23/30 (76.7%) |
 
 ### Leaderboard context
 
-The [DELTA leaderboard](https://www.legalbenchmarks.ai) publishes results from official submissions. For context, here is where irys would stand relative to published leaderboard entries:
+The [DELTA leaderboard](https://www.legalbenchmarks.ai) publishes results from official submissions scored by the same GPT-5.6 Sol judge. For context, here is where irys stands relative to published leaderboard entries:
 
-| System | Criteria Met | Cost/Task |
-|---|---:|---:|
-| GPT-6 Astra | 87.1% | ~$1.13 |
-| **irys (Gemini 3.7 Flash, no thinking)** | **81.5%** | **$0.010** |
-| Fable 5.1 | 75.7% | ~$1.50 |
-| Gemini 3.8 Flash | 65.9% | ~$0.22 |
+| System | Criteria Met | Task Pass | Cost/Task |
+|---|---:|---:|---:|
+| Claude Opus 5 | 77.6% | 13.3% | $1.068 |
+| Claude Fable 5.1 | 75.7% | 15.0% | $1.758 |
+| **irys (Gemini 3.7 Flash, no thinking)** | **75.6%** | **10.0%** | **$0.010** |
+| Grok 4.6 | 68.8% | 10.0% | $0.191 |
+| GPT-6 Astra | 67.7% | 6.7% | $0.672 |
+| Gemini 3.8 Flash | 61.4% | 5.0% | $0.100 |
 
 ![DELTA Dutch Legal Research Benchmark — Consolidated](assets/delta_consolidated.png)
 
-irys achieves **8,150 criteria points per dollar** — **106x** more intelligence per dollar than GPT-6 Astra and **161x** more than Fable 5.1. Compared to GPT-6 Astra — the current top performer — irys is within 6pp on criteria at **113x** lower cost. All of this with a domain-agnostic prompt that says "senior expert" instead of the DELTA-prescribed "experienced legal practitioner."
+irys achieves **7,560 criteria points per dollar** — **104x** more intelligence per dollar than Opus 5 and **175x** more than Fable 5.1. On criteria rate, irys is within 0.1pp of Fable 5.1 and 2pp of Opus 5 — at a fraction of the cost. All of this with a domain-agnostic prompt that says "senior expert" instead of the DELTA-prescribed "experienced legal practitioner."
 
 **Caveats and transparency:**
 
-- **Judge variance is a real problem in LLM-as-judge evaluation.** We ran cross-provider validation with multiple model families as judges on the same answers. There was significant variance between judge families (~10pp on the same run). More than that, we observed variance even when using the same model on the same run — LLM-as-judge scoring is inherently noisy. This is a known limitation of automated legal evaluation, not specific to our results. It is why we would rather submit directly for official judging than try to match an unknown judge configuration.
-- **We are submitting our API for official DELTA judging.** We've reached out to the Legal Benchmarks team and will be submitting the irys API directly for their official evaluation pipeline. The results above are our unofficial self-evaluation that anyone can independently verify. Once official results are published, we will update this section accordingly.
+- **We are submitting our API for official DELTA judging.** Official evaluation includes binding rulings from qualified Dutch lawyers that we cannot replicate locally. Once official results are published, we will update this section accordingly.
 - **System prompt deviation.** The DELTA protocol specifies a fixed legal-domain system prompt. Our harness uses a domain-agnostic prompt ("senior expert" instead of "experienced legal practitioner"). This is consistent across both runs and disclosed here for transparency.
 - **We're publishing our results live.** The complete benchmark outputs — answers and scores for both runs, plus cross-provider validation scores — are available as a downloadable archive in [GitHub Releases](https://github.com/dl1683/irys-stateful-swarms/releases). Anyone can download them, run their own judge, and verify or challenge these numbers. The harness code is at [`benchmarks/delta/`](benchmarks/delta/).
 

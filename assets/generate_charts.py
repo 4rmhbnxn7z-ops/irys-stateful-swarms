@@ -165,10 +165,10 @@ plt.savefig('assets/lab_training_vs_performance.png')
 plt.close()
 
 # ── Chart 6: DELTA Criteria Rate vs Leaderboard ──
-fig, ax = plt.subplots(figsize=(10, 4.5))
-delta_systems = ['GPT-6 Astra', IRYS_LABEL, 'Fable 5.1', 'Gemini 3.8 Flash']
-delta_criteria = [87.1, 81.5, 75.7, 65.9]
-delta_colors = [OTHER, IRYS, FABLE, OTHER]
+fig, ax = plt.subplots(figsize=(10, 5.5))
+delta_systems = ['Opus 5', 'Fable 5.1', IRYS_LABEL, 'Grok 4.6', 'GPT-6 Astra', 'Gemini 3.8 Flash']
+delta_criteria = [77.6, 75.7, 75.6, 68.8, 67.7, 61.4]
+delta_colors = [OPUS, FABLE, IRYS, OTHER, OTHER, OTHER]
 
 bars = ax.barh(range(len(delta_systems)), delta_criteria, color=delta_colors, height=0.55, edgecolor='white', linewidth=0.5)
 ax.set_yticks(range(len(delta_systems)))
@@ -178,15 +178,15 @@ ax.set_xlabel('Criteria Met (%)', fontsize=13, fontweight='bold')
 ax.set_title('DELTA Dutch Legal Research — Criteria Rate', fontsize=16, fontweight='bold', pad=15)
 
 for i, (bar, val) in enumerate(zip(bars, delta_criteria)):
-    weight = 'bold' if i == 1 else 'normal'
+    weight = 'bold' if i == 2 else 'normal'
     ax.text(bar.get_width() + 0.3, bar.get_y() + bar.get_height()/2,
             f'{val}%', va='center', fontsize=11, fontweight=weight,
             color=delta_colors[i])
 
-ax.set_xlim(0, 100)
+ax.set_xlim(0, 92)
 ax.xaxis.set_major_formatter(mticker.FormatStrFormatter('%g%%'))
 
-ax.text(50, 3.7, 'Leaderboard scores may use different judges — see caveats',
+ax.text(46, 5.7, 'All scored by GPT-5.6 Sol (official DELTA judge)',
         fontsize=9, color='#888888', style='italic', ha='center')
 
 plt.tight_layout()
@@ -194,10 +194,10 @@ plt.savefig('assets/delta_criteria_rate.png')
 plt.close()
 
 # ── Chart 7: DELTA Cost per Task vs Leaderboard ──
-fig, ax = plt.subplots(figsize=(10, 4.5))
-delta_cost_systems = [IRYS_LABEL, 'Gemini 3.8 Flash', 'GPT-6 Astra', 'Fable 5.1']
-delta_costs = [0.010, 0.22, 1.13, 1.50]
-delta_cost_colors = [IRYS, OTHER, OTHER, FABLE]
+fig, ax = plt.subplots(figsize=(10, 5.5))
+delta_cost_systems = [IRYS_LABEL, 'Gemini 3.8 Flash', 'Grok 4.6', 'GPT-6 Astra', 'Opus 5', 'Fable 5.1']
+delta_costs = [0.010, 0.100, 0.191, 0.672, 1.068, 1.758]
+delta_cost_colors = [IRYS, OTHER, OTHER, OTHER, OPUS, FABLE]
 
 bars = ax.barh(range(len(delta_cost_systems)), delta_costs, color=delta_cost_colors, height=0.55, edgecolor='white', linewidth=0.5)
 ax.set_yticks(range(len(delta_cost_systems)))
@@ -208,13 +208,13 @@ ax.set_title('DELTA Dutch Legal Research — Cost per Task', fontsize=16, fontwe
 
 for i, (bar, val) in enumerate(zip(bars, delta_costs)):
     weight = 'bold' if i == 0 else 'normal'
-    suffix = '  (150x cheaper than Fable 5.1)' if i == 0 else ''
+    suffix = '  (175x cheaper than Fable 5.1)' if i == 0 else ''
     ax.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height()/2,
-            f'${val:.3f}{suffix}' if val < 1 else f'${val:.2f}{suffix}',
+            f'${val:.3f}{suffix}' if val < 0.1 else f'${val:.3f}',
             va='center', fontsize=11, fontweight=weight,
             color=delta_cost_colors[i])
 
-ax.set_xlim(0, 2.2)
+ax.set_xlim(0, 2.5)
 plt.tight_layout()
 plt.savefig('assets/delta_cost_per_task.png')
 plt.close()
@@ -223,10 +223,12 @@ plt.close()
 fig, ax = plt.subplots(figsize=(10, 6))
 
 delta_scatter = [
-    ('irys', 0.010, 81.5, IRYS),
-    ('GPT-6 Astra', 1.13, 87.1, OTHER),
-    ('Fable 5.1', 1.50, 75.7, FABLE),
-    ('Gemini 3.8 Flash', 0.22, 65.9, OTHER),
+    ('irys', 0.010, 75.6, IRYS),
+    ('Opus 5', 1.068, 77.6, OPUS),
+    ('Fable 5.1', 1.758, 75.7, FABLE),
+    ('Grok 4.6', 0.191, 68.8, OTHER),
+    ('GPT-6 Astra', 0.672, 67.7, OTHER),
+    ('Gemini 3.8 Flash', 0.100, 61.4, OTHER),
 ]
 
 for name, cost, criteria, color in delta_scatter:
@@ -238,7 +240,8 @@ for name, cost, criteria, color in delta_scatter:
     if name == 'irys':
         offset_x = 8
         offset_y = -1
-    ipp = criteria / cost if cost > 0 else float('inf')
+    if name == 'Grok 4.6':
+        offset_y = 3
     label_text = f'{name}\n{criteria}% @ ${cost}'
     ax.annotate(label_text,
                 (cost, criteria), textcoords='offset points',
@@ -248,16 +251,16 @@ for name, cost, criteria, color in delta_scatter:
 ax.set_xlabel('Cost per Task ($)', fontsize=13, fontweight='bold')
 ax.set_ylabel('Criteria Met (%)', fontsize=13, fontweight='bold')
 ax.set_title('Performance vs Cost — DELTA Benchmark', fontsize=16, fontweight='bold', pad=15)
-ax.set_xlim(-0.1, 2.0)
-ax.set_ylim(55, 95)
+ax.set_xlim(-0.1, 2.2)
+ax.set_ylim(55, 85)
 ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%g%%'))
 
-ax.annotate('', xy=(0.010, 81.5), xytext=(1.50, 75.7),
+ax.annotate('', xy=(0.010, 75.6), xytext=(1.758, 75.7),
             arrowprops=dict(arrowstyle='->', color='#666666', lw=1.5, linestyle='--'))
-ax.text(0.8, 82, '150x cheaper,\nhigher quality', fontsize=10, color='#666666',
+ax.text(0.9, 78, '175x cheaper,\nsame quality', fontsize=10, color='#666666',
         ha='center', style='italic')
 
-ax.text(1.0, 57, 'Leaderboard scores may use different judges — see caveats',
+ax.text(1.1, 57, 'All scored by GPT-5.6 Sol (official DELTA judge)',
         fontsize=9, color='#888888', style='italic', ha='center')
 
 plt.tight_layout()
@@ -265,81 +268,77 @@ plt.savefig('assets/delta_performance_vs_cost.png')
 plt.close()
 
 # ── Chart 9: DELTA Consolidated Dashboard (2x2) ──
-fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
-systems = ['GPT-6\nAstra', 'irys', 'Fable\n5.1', 'Gemini\n3.8 Flash']
-colors = [OTHER, IRYS, FABLE, OTHER]
-criteria = [87.1, 81.5, 75.7, 65.9]
-task_pass = [None, 13.3, None, None]
-costs = [1.13, 0.010, 1.50, 0.22]
+systems = ['Opus\n5', 'Fable\n5.1', 'irys', 'Grok\n4.6', 'GPT-6\nAstra', 'Gemini\n3.8 Flash']
+colors = [OPUS, FABLE, IRYS, OTHER, OTHER, OTHER]
+criteria = [77.6, 75.7, 75.6, 68.8, 67.7, 61.4]
+task_pass = [13.3, 15.0, 10.0, 10.0, 6.7, 5.0]
+costs = [1.068, 1.758, 0.010, 0.191, 0.672, 0.100]
 cpd = [c / cost for c, cost in zip(criteria, costs)]
+n = len(systems)
 
 # Panel 1 (top-left): Criteria Rate
 ax = axes[0, 0]
-bars = ax.bar(range(4), criteria, color=colors, width=0.55, edgecolor='white', linewidth=0.5)
+bars = ax.bar(range(n), criteria, color=colors, width=0.55, edgecolor='white', linewidth=0.5)
 for i, (bar, val) in enumerate(zip(bars, criteria)):
-    weight = 'bold' if i == 1 else 'normal'
+    weight = 'bold' if i == 2 else 'normal'
     ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.8,
-            f'{val}%', ha='center', va='bottom', fontsize=12, fontweight=weight, color=colors[i])
-ax.set_xticks(range(4))
-ax.set_xticklabels(systems, fontsize=11)
-ax.set_ylim(0, 100)
+            f'{val}%', ha='center', va='bottom', fontsize=11, fontweight=weight, color=colors[i])
+ax.set_xticks(range(n))
+ax.set_xticklabels(systems, fontsize=10)
+ax.set_ylim(0, 92)
 ax.set_ylabel('%', fontsize=12)
 ax.set_title('Criteria Met', fontsize=15, fontweight='bold', pad=12)
 ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%g%%'))
 
 # Panel 2 (top-right): Task Pass Rate
 ax = axes[0, 1]
-task_pass_vals = [0 if v is None else v for v in task_pass]
-task_pass_colors = ['#e0e0e0' if v is None else c for v, c in zip(task_pass, colors)]
-bars = ax.bar(range(4), task_pass_vals, color=task_pass_colors, width=0.55, edgecolor='white', linewidth=0.5)
+bars = ax.bar(range(n), task_pass, color=colors, width=0.55, edgecolor='white', linewidth=0.5)
 for i, (bar, val) in enumerate(zip(bars, task_pass)):
-    if val is not None:
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
-                f'{val}%', ha='center', va='bottom', fontsize=12, fontweight='bold', color=colors[i])
-    else:
-        ax.text(bar.get_x() + bar.get_width()/2, 1.5,
-                'N/A', ha='center', va='bottom', fontsize=11, color='#999999', style='italic')
-ax.set_xticks(range(4))
-ax.set_xticklabels(systems, fontsize=11)
-ax.set_ylim(0, 25)
+    weight = 'bold' if i == 2 else 'normal'
+    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.3,
+            f'{val}%', ha='center', va='bottom', fontsize=11, fontweight=weight, color=colors[i])
+ax.set_xticks(range(n))
+ax.set_xticklabels(systems, fontsize=10)
+ax.set_ylim(0, 22)
 ax.set_ylabel('%', fontsize=12)
 ax.set_title('Task Pass (all criteria)', fontsize=15, fontweight='bold', pad=12)
 ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%g%%'))
 
 # Panel 3 (bottom-left): Cost per Task
 ax = axes[1, 0]
-bars = ax.bar(range(4), costs, color=colors, width=0.55, edgecolor='white', linewidth=0.5)
+bars = ax.bar(range(n), costs, color=colors, width=0.55, edgecolor='white', linewidth=0.5)
 for i, (bar, val) in enumerate(zip(bars, costs)):
-    weight = 'bold' if i == 1 else 'normal'
-    label = f'${val:.3f}' if val < 0.1 else f'${val:.2f}'
+    weight = 'bold' if i == 2 else 'normal'
+    label = f'${val:.3f}' if val < 0.1 else f'${val:.3f}'
     y_pos = bar.get_height() + 0.02
     ax.text(bar.get_x() + bar.get_width()/2, y_pos,
-            label, ha='center', va='bottom', fontsize=12, fontweight=weight, color=colors[i])
-ax.set_xticks(range(4))
-ax.set_xticklabels(systems, fontsize=11)
-ax.set_ylim(0, 2.0)
+            label, ha='center', va='bottom', fontsize=11, fontweight=weight, color=colors[i])
+ax.set_xticks(range(n))
+ax.set_xticklabels(systems, fontsize=10)
+ax.set_ylim(0, 2.3)
 ax.set_ylabel('$', fontsize=12)
 ax.set_title('Cost per Task', fontsize=15, fontweight='bold', pad=12)
 
 # Panel 4 (bottom-right): Intelligence per Dollar
 ax = axes[1, 1]
-bars = ax.bar(range(4), cpd, color=colors, width=0.55, edgecolor='white', linewidth=0.5)
+bars = ax.bar(range(n), cpd, color=colors, width=0.55, edgecolor='white', linewidth=0.5)
 for i, (bar, val) in enumerate(zip(bars, cpd)):
-    weight = 'bold' if i == 1 else 'normal'
+    weight = 'bold' if i == 2 else 'normal'
     if val > 1000:
         label = f'{val:,.0f}'
     else:
         label = f'{val:.1f}'
     ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 80,
-            label, ha='center', va='bottom', fontsize=12, fontweight=weight, color=colors[i])
-ax.set_xticks(range(4))
-ax.set_xticklabels(systems, fontsize=11)
+            label, ha='center', va='bottom', fontsize=11, fontweight=weight, color=colors[i])
+ax.set_xticks(range(n))
+ax.set_xticklabels(systems, fontsize=10)
 ax.set_ylabel('criteria % per $', fontsize=12)
 ax.set_title('Intelligence per Dollar', fontsize=15, fontweight='bold', pad=12)
 
 fig.suptitle('DELTA Dutch Legal Research Benchmark', fontsize=18, fontweight='bold', y=1.01)
-fig.text(0.5, -0.01, 'Leaderboard scores may use different judges — see caveats. Task pass rates not published for leaderboard entries.',
+fig.text(0.5, -0.01, 'All scored by GPT-5.6 Sol (official DELTA judge). irys uses domain-agnostic prompts.',
          fontsize=10, color='#888888', style='italic', ha='center')
 
 plt.tight_layout()

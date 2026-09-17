@@ -25,6 +25,7 @@ load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 from google import genai
 from google.genai import types as genai_types
 import anthropic
+from openai import OpenAI
 
 ROOT = Path(__file__).resolve().parent
 TASKS_JSONL = ROOT / "data" / "tasks.jsonl"
@@ -50,12 +51,16 @@ JUDGE_MODEL = os.environ.get("DELTA_JUDGE_MODEL", "gemini-3.5-flash-lite")
 def detect_provider(model: str) -> str:
     if model.startswith("claude-"):
         return "anthropic"
+    if model.startswith("gpt-"):
+        return "openai"
     return "gemini"
 
 
 def make_client(provider: str = "gemini"):
     if provider == "anthropic":
         return anthropic.Anthropic()
+    if provider == "openai":
+        return OpenAI()
     key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     http_options = genai_types.HttpOptions(timeout=180_000)
     if key:
@@ -126,13 +131,33 @@ def _judge_anthropic(client, user_msg: str, model: str) -> str:
     return text.strip()
 
 
+def _judge_openai(client, user_msg: str, model: str) -> str:
+    response = client.chat.completions.create(
+        model=model,
+        max_completion_tokens=256,
+        messages=[
+            {"role": "system", "content": JUDGE_SYSTEM},
+            {"role": "user", "content": user_msg},
+        ],
+        response_format={"type": "json_object"},
+    )
+    return (response.choices[0].message.content or "").strip()
+
+
+JUDGE_FNS = {
+    "anthropic": _judge_anthropic,
+    "openai": _judge_openai,
+    "gemini": _judge_gemini,
+}
+
+
 def judge_criterion(client, answer_text: str,
                     criterion: dict, model: str, *, provider: str = "gemini") -> dict:
     cid = criterion["id"]
     ctype = criterion["type"]
     user_msg = _build_user_msg(answer_text, criterion)
 
-    judge_fn = _judge_anthropic if provider == "anthropic" else _judge_gemini
+    judge_fn = JUDGE_FNS.get(provider, _judge_gemini)
 
     for attempt in range(3):
         try:
@@ -169,8 +194,11 @@ def judge_criterion(client, answer_text: str,
 
 
 def score_answer(client, answer: dict, task: dict,
-                 judge_model: str, *, provider: str = "gemini") -> dict:
+                 judge_model: str, *, provider: str = "gemini",
+                 criteria_type: str | None = None) -> dict:
     criteria = task.get("criteria", [])
+    if criteria_type:
+        criteria = [c for c in criteria if c["type"] == criteria_type]
     answer_text = answer.get("answer", "")
     if not answer_text:
         return {
@@ -270,6 +298,8 @@ def main():
                         help=f"Judge model override (default: {JUDGE_MODEL})")
     parser.add_argument("--task", type=str, default=None,
                         help="Score a single task only")
+    parser.add_argument("--criteria-type", type=str, default=None,
+                        help="Score only criteria of this type (substance/citation/form)")
     args = parser.parse_args()
 
     judge_model = args.judge_model or JUDGE_MODEL
@@ -312,7 +342,8 @@ def main():
         print(f"  [{i+1}/{len(answers)}] {tid} ({n_criteria} criteria)...",
               end=" ", flush=True)
 
-        score = score_answer(client, answer, task, judge_model, provider=provider)
+        score = score_answer(client, answer, task, judge_model, provider=provider,
+                             criteria_type=args.criteria_type)
         all_scores.append(score)
 
         with open(output, "a", encoding="utf-8") as f:
