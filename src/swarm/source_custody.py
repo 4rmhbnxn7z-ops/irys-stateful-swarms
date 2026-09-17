@@ -37,7 +37,7 @@ def enforce_source_custody(
     stage: str,
 ) -> dict:
     """Quarantine active entries that claim non-existent source documents."""
-    if not source_custody_enabled():
+    if not source_custody_enabled() or not blackboard.documents:
         report = _empty_custody_report(stage)
         write_source_custody_report(blackboard.output_dir, report)
         return report

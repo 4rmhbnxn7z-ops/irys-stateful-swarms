@@ -225,6 +225,7 @@ def run_swarm(task: Task, caller: ModelCaller, *,
         _premium_caller = AnthropicCaller(model=_premium_caller_env)
 
     _entries_per_iter: list[int] = []
+    _has_docs = bool(blackboard.documents)
 
     for iteration in range(1, max_iter + 1):
         blackboard.iteration = iteration
@@ -349,7 +350,7 @@ def run_swarm(task: Task, caller: ModelCaller, *,
         for wo in outputs:
             blackboard.add_tokens(wo.tokens_used, wo.tokens_input, wo.tokens_output, wo.model)
             for e in wo.entries:
-                if passes_quality_gate(e):
+                if passes_quality_gate(e, has_documents=_has_docs):
                     new_entries.append(e)
             for doc_name, sec_name in wo.sections_read:
                 for ds in blackboard.documents:
@@ -414,7 +415,7 @@ def run_swarm(task: Task, caller: ModelCaller, *,
                 for wo in outputs:
                     blackboard.add_tokens(wo.tokens_used, wo.tokens_input, wo.tokens_output, wo.model)
                     for e in wo.entries:
-                        if passes_quality_gate(e):
+                        if passes_quality_gate(e, has_documents=_has_docs):
                             new_entries.append(e)
                     for doc_name, sec_name in wo.sections_read:
                         for ds in blackboard.documents:
@@ -526,7 +527,7 @@ def run_swarm(task: Task, caller: ModelCaller, *,
     if total_docs > 0 and read_docs == 0:
         block_reasons.append(f"zero documents read out of {total_docs}")
         synthesis_blocked = True
-    if not sourced_active:
+    if not sourced_active and total_docs > 0:
         block_reasons.append("zero source-grounded active entries")
         synthesis_blocked = True
     if quarantine_rate > 0.8 and evidentiary_entries > 20:

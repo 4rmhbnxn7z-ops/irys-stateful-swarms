@@ -285,7 +285,7 @@ def parse_worker_output(payload: dict, iteration: int,
 
         source = None
         raw_doc = f.get("source_document")
-        if raw_doc and valid_doc_names is not None:
+        if raw_doc and valid_doc_names is not None and valid_doc_names:
             from .source_custody import source_document_is_valid
             if not source_document_is_valid(str(raw_doc), valid_doc_names):
                 if entry_type == "observation":
@@ -335,11 +335,12 @@ _NEGATIVE_PREFIXES = (
 )
 
 
-def passes_quality_gate(entry: Entry) -> bool:
+def passes_quality_gate(entry: Entry, *, has_documents: bool = True) -> bool:
     if not entry.content or len(entry.content.strip()) < 20:
         return False
     if entry.type == "observation" and (not entry.source or not entry.source.document):
-        return False
+        if has_documents:
+            return False
     if entry.type == "calculation":
         has_nums = sum(1 for c in entry.content if c.isdigit()) >= 2
         has_op = any(op in entry.content for op in ("=", "+", "×", "*", "/", "%", "−"))
