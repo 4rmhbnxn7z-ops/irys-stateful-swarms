@@ -42,7 +42,7 @@ JUDGE_SYSTEM = (
     "\"reasoning\": \"one sentence\"}"
 )
 
-JUDGE_MODEL = os.environ.get("DELTA_JUDGE_MODEL", "gemini-2.0-flash-lite")
+JUDGE_MODEL = os.environ.get("DELTA_JUDGE_MODEL", "gemini-3.5-flash-lite")
 
 
 def make_client() -> genai.Client:

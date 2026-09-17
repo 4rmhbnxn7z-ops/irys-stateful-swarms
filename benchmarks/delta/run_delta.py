@@ -52,7 +52,7 @@ SYSTEM_PROMPT_WITH_SEARCH = (
     "dates."
 )
 
-MODEL = os.environ.get("DELTA_MODEL", "gemini-2.5-flash")
+MODEL = os.environ.get("DELTA_MODEL", "gemini-3.7-flash")
 SYSTEM_NAME = os.environ.get("DELTA_SYSTEM", "irys-swarm")
 EXA_API_KEY = os.environ.get("EXA_API_KEY", "")
 
