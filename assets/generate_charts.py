@@ -223,7 +223,7 @@ plt.close()
 fig, ax = plt.subplots(figsize=(10, 6))
 
 delta_scatter = [
-    ('irys', 0.010, 75.6, IRYS),
+    ('irys (Gemini 3.7 Flash, no thinking)', 0.010, 75.6, IRYS),
     ('Opus 5', 1.068, 77.6, OPUS),
     ('Fable 5.1', 1.758, 75.7, FABLE),
     ('Grok 4.6', 0.191, 68.8, OTHER),
@@ -237,7 +237,7 @@ for name, cost, criteria, color in delta_scatter:
     offset_y = 0
     if name == 'Gemini 3.8 Flash':
         offset_y = -3
-    if name == 'irys':
+    if name.startswith('irys'):
         offset_x = 8
         offset_y = -1
     if name == 'Grok 4.6':
@@ -270,7 +270,7 @@ plt.close()
 # ── Chart 9: DELTA Consolidated Dashboard (2x2) ──
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
-systems = ['Opus\n5', 'Fable\n5.1', 'irys', 'Grok\n4.6', 'GPT-6\nAstra', 'Gemini\n3.8 Flash']
+systems = ['Opus\n5', 'Fable\n5.1', 'irys\n(Gemini 3.7 Flash,\nno thinking)', 'Grok\n4.6', 'GPT-6\nAstra', 'Gemini\n3.8 Flash']
 colors = [OPUS, FABLE, IRYS, OTHER, OTHER, OTHER]
 criteria = [77.6, 75.7, 75.6, 68.8, 67.7, 61.4]
 task_pass = [13.3, 15.0, 10.0, 10.0, 6.7, 5.0]
