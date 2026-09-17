@@ -264,4 +264,86 @@ plt.tight_layout()
 plt.savefig('assets/delta_performance_vs_cost.png')
 plt.close()
 
-print("All 8 charts generated in assets/")
+# ── Chart 9: DELTA Consolidated Dashboard (2x2) ──
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+systems = ['GPT-6\nAstra', 'irys', 'Fable\n5.1', 'Gemini\n3.8 Flash']
+colors = [OTHER, IRYS, FABLE, OTHER]
+criteria = [87.1, 81.5, 75.7, 65.9]
+task_pass = [None, 13.3, None, None]
+costs = [1.13, 0.010, 1.50, 0.22]
+cpd = [c / cost for c, cost in zip(criteria, costs)]
+
+# Panel 1 (top-left): Criteria Rate
+ax = axes[0, 0]
+bars = ax.bar(range(4), criteria, color=colors, width=0.55, edgecolor='white', linewidth=0.5)
+for i, (bar, val) in enumerate(zip(bars, criteria)):
+    weight = 'bold' if i == 1 else 'normal'
+    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.8,
+            f'{val}%', ha='center', va='bottom', fontsize=12, fontweight=weight, color=colors[i])
+ax.set_xticks(range(4))
+ax.set_xticklabels(systems, fontsize=11)
+ax.set_ylim(0, 100)
+ax.set_ylabel('%', fontsize=12)
+ax.set_title('Criteria Met', fontsize=15, fontweight='bold', pad=12)
+ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%g%%'))
+
+# Panel 2 (top-right): Task Pass Rate
+ax = axes[0, 1]
+task_pass_vals = [0 if v is None else v for v in task_pass]
+task_pass_colors = ['#e0e0e0' if v is None else c for v, c in zip(task_pass, colors)]
+bars = ax.bar(range(4), task_pass_vals, color=task_pass_colors, width=0.55, edgecolor='white', linewidth=0.5)
+for i, (bar, val) in enumerate(zip(bars, task_pass)):
+    if val is not None:
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
+                f'{val}%', ha='center', va='bottom', fontsize=12, fontweight='bold', color=colors[i])
+    else:
+        ax.text(bar.get_x() + bar.get_width()/2, 1.5,
+                'N/A', ha='center', va='bottom', fontsize=11, color='#999999', style='italic')
+ax.set_xticks(range(4))
+ax.set_xticklabels(systems, fontsize=11)
+ax.set_ylim(0, 25)
+ax.set_ylabel('%', fontsize=12)
+ax.set_title('Task Pass (all criteria)', fontsize=15, fontweight='bold', pad=12)
+ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%g%%'))
+
+# Panel 3 (bottom-left): Cost per Task
+ax = axes[1, 0]
+bars = ax.bar(range(4), costs, color=colors, width=0.55, edgecolor='white', linewidth=0.5)
+for i, (bar, val) in enumerate(zip(bars, costs)):
+    weight = 'bold' if i == 1 else 'normal'
+    label = f'${val:.3f}' if val < 0.1 else f'${val:.2f}'
+    y_pos = bar.get_height() + 0.02
+    ax.text(bar.get_x() + bar.get_width()/2, y_pos,
+            label, ha='center', va='bottom', fontsize=12, fontweight=weight, color=colors[i])
+ax.set_xticks(range(4))
+ax.set_xticklabels(systems, fontsize=11)
+ax.set_ylim(0, 2.0)
+ax.set_ylabel('$', fontsize=12)
+ax.set_title('Cost per Task', fontsize=15, fontweight='bold', pad=12)
+
+# Panel 4 (bottom-right): Intelligence per Dollar
+ax = axes[1, 1]
+bars = ax.bar(range(4), cpd, color=colors, width=0.55, edgecolor='white', linewidth=0.5)
+for i, (bar, val) in enumerate(zip(bars, cpd)):
+    weight = 'bold' if i == 1 else 'normal'
+    if val > 1000:
+        label = f'{val:,.0f}'
+    else:
+        label = f'{val:.1f}'
+    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 80,
+            label, ha='center', va='bottom', fontsize=12, fontweight=weight, color=colors[i])
+ax.set_xticks(range(4))
+ax.set_xticklabels(systems, fontsize=11)
+ax.set_ylabel('criteria % per $', fontsize=12)
+ax.set_title('Intelligence per Dollar', fontsize=15, fontweight='bold', pad=12)
+
+fig.suptitle('DELTA Dutch Legal Research Benchmark', fontsize=18, fontweight='bold', y=1.01)
+fig.text(0.5, -0.01, 'Leaderboard scores may use different judges — see caveats. Task pass rates not published for leaderboard entries.',
+         fontsize=10, color='#888888', style='italic', ha='center')
+
+plt.tight_layout()
+plt.savefig('assets/delta_consolidated.png', bbox_inches='tight')
+plt.close()
+
+print("All 9 charts generated in assets/")

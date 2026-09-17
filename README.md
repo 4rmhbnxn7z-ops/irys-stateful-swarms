@@ -16,11 +16,9 @@ PS: We use Gemini 3.5 Flash Lite as a judge because it's intelligent, cheap, and
 
 **DELTA Dutch legal research:**
 
-![DELTA — Criteria Rate](assets/delta_criteria_rate.png)
+![DELTA Dutch Legal Research Benchmark — Consolidated](assets/delta_consolidated.png)
 
-![DELTA — Cost per Task](assets/delta_cost_per_task.png)
-
-**150x** cheaper than Fable 5.1. **81.5%** criteria with a domain-agnostic prompt — no legal-specific tuning.
+**8,150** criteria points per dollar — **106x** more intelligence per dollar than GPT-6 Astra, **161x** more than Fable 5.1. **81.5%** criteria with a domain-agnostic prompt — no legal-specific tuning.
 
 ![What $100 Buys You on LAB](assets/lab_what_100_buys.png)
 
@@ -220,17 +218,9 @@ The [DELTA leaderboard](https://www.legalbenchmarks.ai) publishes results from o
 | Fable 5.1 | 75.7% | ~$1.50 |
 | Gemini 3.8 Flash | 65.9% | ~$0.22 |
 
-![DELTA — Performance vs Cost](assets/delta_performance_vs_cost.png)
+![DELTA Dutch Legal Research Benchmark — Consolidated](assets/delta_consolidated.png)
 
-irys achieves **150x** lower cost per task than Fable 5.1 while scoring higher on criteria. Compared to GPT-6 Astra — the current top performer — irys is within 6pp on criteria at **113x** lower cost. All of this with a domain-agnostic prompt that says "senior expert" instead of the DELTA-prescribed "experienced legal practitioner."
-
-#### Head-to-head: cost efficiency
-
-| | **irys (Gemini 3.7 Flash, no thinking)** | GPT-6 Astra | Fable 5.1 | Gemini 3.8 Flash |
-|---|---:|---:|---:|---:|
-| Criteria met | **81.5%** | 87.1% | 75.7% | 65.9% |
-| Cost/task | **$0.010** | ~$1.13 | ~$1.50 | ~$0.22 |
-| Criteria per dollar | **8,150** | 77.1 | 50.5 | 299.5 |
+irys achieves **8,150 criteria points per dollar** — **106x** more intelligence per dollar than GPT-6 Astra and **161x** more than Fable 5.1. Compared to GPT-6 Astra — the current top performer — irys is within 6pp on criteria at **113x** lower cost. All of this with a domain-agnostic prompt that says "senior expert" instead of the DELTA-prescribed "experienced legal practitioner."
 
 **Caveats and transparency:**
 
