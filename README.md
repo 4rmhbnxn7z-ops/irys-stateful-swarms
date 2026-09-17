@@ -31,6 +31,7 @@ PS: We use Gemini 3.5 Flash Lite as a judge because it's intelligent, cheap, and
 - [Beyond legal: domain-agnostic](#beyond-legal-the-stateful-swarm-paradigm-is-domain-agnostic)
   - [SWE-bench Verified](#swe-bench-verified-preliminary-scaffold-evaluation)
   - [Datadog 10-K strategic analysis](#datadog-10-k-strategic-analysis)
+  - [DELTA Dutch legal research benchmark](#delta-dutch-legal-research-benchmark)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
@@ -562,6 +563,33 @@ A preliminary [SWE-bench Verified](https://www.swebench.com/) run explored Black
 With zero code changes, we pointed irys-stateful-swarms at seven Datadog 10-K annual filings (FY2019–FY2025) and asked for a strategic-priority analysis. The system produced a 12,657-word investment memo tracing product strategy, go-to-market changes, competitive positioning, financial trajectory, and risk factors across the filings. This is qualitative evidence of domain transfer, not a controlled benchmark result.
 
 A follow-on comparison evaluated blackboard reuse across several configurations. Exact routing, configuration-tied performance, and internal operating data are omitted under the repository's publication policy. The bounded public observation is that persistent blackboard state let later queries reuse structured evidence accumulated during earlier queries. The underlying comparison artifacts require a separate publication audit before they should be cited.
+
+### DELTA Dutch legal research benchmark
+
+[DELTA](https://github.com/legalbenchmarks/delta) (v1.1.0) is a Dutch legal research benchmark from [Legal Benchmarks](https://www.legalbenchmarks.ai): 15 research tasks, 273 binary criteria (192 substance, 51 citation, 30 form). Each task asks a system to produce a complete legal research deliverable, which is then graded against per-criterion pass/fail rubrics.
+
+We ran the full benchmark twice using a domain-agnostic harness with web search (Exa API), averaged per the protocol:
+
+| Metric | Run 1 | Run 2 | Average |
+|---|---:|---:|---:|
+| Criteria met | 222/273 (81.3%) | 223/273 (81.7%) | **81.5%** |
+| Task pass (all criteria) | 2/15 (13.3%) | 2/15 (13.3%) | **13.3%** |
+| Cost per task | $0.010 | $0.010 | **$0.010** |
+
+Per-axis breakdown (DELTA reports substance and form separately):
+
+| Axis | Run 1 | Run 2 |
+|---|---:|---:|
+| Substance (substance + citation) | 195/243 (80.2%) | 196/243 (80.7%) |
+| Form | 27/30 (90.0%) | 27/30 (90.0%) |
+
+**Known limitations and caveats:**
+
+- **Judge variance.** We tried cross-provider validation with multiple model families as judges. There was significant variance between judge families (~10pp), which is consistent with the known sensitivity of LLM-as-judge evaluation. We've reached out to the Legal Benchmarks team for disclosure of which judge models their leaderboard uses so we can run an apples-to-apples comparison. Until then, these results use a single automated judge and should be treated accordingly.
+- **System prompt deviation.** The DELTA protocol specifies a fixed legal-domain system prompt. Our harness uses a domain-agnostic prompt ("senior expert" instead of "experienced legal practitioner"). This is consistent across both runs and disclosed here for transparency.
+- **Unofficial evaluation.** These results are not submitted to the DELTA leaderboard and should not be directly compared to leaderboard scores, which may use different judges, criteria revisions, or scoring procedures.
+
+The complete benchmark outputs (answers and scores for both runs, plus cross-provider validation scores) are available as a downloadable archive in [GitHub Releases](https://github.com/dl1683/irys-stateful-swarms/releases). The harness code is at [`benchmarks/delta/`](benchmarks/delta/).
 
 ---
 
