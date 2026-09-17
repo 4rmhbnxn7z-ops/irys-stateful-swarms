@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """DELTA benchmark judge -- scores answers against binary criteria.
 
-Implements the judge protocol: multiple independent judges from different
-model families, each grading blind. Disagreements on task pass/fail are
-flagged for review.
+Evaluates each answer against the task's binary pass/fail criteria using
+a single judge model, grading blind. Override --judge-model to run a
+cross-provider validation pass.
 
 Usage:
   python judge_delta.py --answers results/answers_run1.jsonl --output results/scores_run1.jsonl
+  python judge_delta.py --answers results/answers_run1.jsonl --judge-model claude-haiku-4-5-20251001 --output results/scores_run1_claude.jsonl
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
 from google import genai
 from google.genai import types as genai_types
+import anthropic
 
 ROOT = Path(__file__).resolve().parent
 TASKS_JSONL = ROOT / "data" / "tasks.jsonl"
@@ -45,7 +47,15 @@ JUDGE_SYSTEM = (
 JUDGE_MODEL = os.environ.get("DELTA_JUDGE_MODEL", "gemini-3.5-flash-lite")
 
 
-def make_client() -> genai.Client:
+def detect_provider(model: str) -> str:
+    if model.startswith("claude-"):
+        return "anthropic"
+    return "gemini"
+
+
+def make_client(provider: str = "gemini"):
+    if provider == "anthropic":
+        return anthropic.Anthropic()
     key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     http_options = genai_types.HttpOptions(timeout=180_000)
     if key:
@@ -74,14 +84,12 @@ def load_answers(path: str) -> list[dict]:
     return answers
 
 
-def judge_criterion(client: genai.Client, answer_text: str,
-                    criterion: dict, model: str) -> dict:
+def _build_user_msg(answer_text: str, criterion: dict) -> str:
     cid = criterion["id"]
     ctype = criterion["type"]
     pass_nl = criterion["pass_criteria"]["nl"]
     pass_en = criterion["pass_criteria"]["en"]
-
-    user_msg = (
+    return (
         f"## Answer to evaluate\n\n{answer_text}\n\n"
         f"## Criterion {cid} ({ctype})\n\n"
         f"**Dutch (normative):** {pass_nl}\n\n"
@@ -89,21 +97,46 @@ def judge_criterion(client: genai.Client, answer_text: str,
         f"Does the answer meet this criterion? Respond with JSON only."
     )
 
+
+def _judge_gemini(client, user_msg: str, model: str) -> str:
     config = genai_types.GenerateContentConfig(
         system_instruction=JUDGE_SYSTEM,
         max_output_tokens=256,
         temperature=0.0,
         response_mime_type="application/json",
     )
+    response = client.models.generate_content(
+        model=model, contents=user_msg, config=config,
+    )
+    return (response.text or "").strip()
+
+
+def _judge_anthropic(client, user_msg: str, model: str) -> str:
+    response = client.messages.create(
+        model=model,
+        max_tokens=256,
+        temperature=0.0,
+        system=JUDGE_SYSTEM,
+        messages=[{"role": "user", "content": user_msg}],
+    )
+    text = ""
+    for block in response.content:
+        if block.type == "text":
+            text = block.text
+    return text.strip()
+
+
+def judge_criterion(client, answer_text: str,
+                    criterion: dict, model: str, *, provider: str = "gemini") -> dict:
+    cid = criterion["id"]
+    ctype = criterion["type"]
+    user_msg = _build_user_msg(answer_text, criterion)
+
+    judge_fn = _judge_anthropic if provider == "anthropic" else _judge_gemini
 
     for attempt in range(3):
         try:
-            response = client.models.generate_content(
-                model=model,
-                contents=user_msg,
-                config=config,
-            )
-            text = (response.text or "").strip()
+            text = judge_fn(client, user_msg, model)
             if text.startswith("```"):
                 text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
@@ -135,8 +168,8 @@ def judge_criterion(client: genai.Client, answer_text: str,
     }
 
 
-def score_answer(client: genai.Client, answer: dict, task: dict,
-                 judge_model: str) -> dict:
+def score_answer(client, answer: dict, task: dict,
+                 judge_model: str, *, provider: str = "gemini") -> dict:
     criteria = task.get("criteria", [])
     answer_text = answer.get("answer", "")
     if not answer_text:
@@ -158,7 +191,7 @@ def score_answer(client: genai.Client, answer: dict, task: dict,
 
     results = []
     for criterion in criteria:
-        r = judge_criterion(client, answer_text, criterion, judge_model)
+        r = judge_criterion(client, answer_text, criterion, judge_model, provider=provider)
         results.append(r)
 
     passed = sum(1 for r in results if r["verdict"] == "PASS")
@@ -240,6 +273,7 @@ def main():
     args = parser.parse_args()
 
     judge_model = args.judge_model or JUDGE_MODEL
+    provider = detect_provider(judge_model)
 
     tasks_index = load_tasks_index()
     answers = load_answers(args.answers)
@@ -260,8 +294,8 @@ def main():
                     rec = json.loads(line)
                     existing.add(rec["task_id"])
 
-    client = make_client()
-    print(f"DELTA judge -- model={judge_model}, {len(answers)} answers\n")
+    client = make_client(provider)
+    print(f"DELTA judge -- model={judge_model}, provider={provider}, {len(answers)} answers\n")
 
     all_scores = []
     for i, answer in enumerate(answers):
@@ -278,7 +312,7 @@ def main():
         print(f"  [{i+1}/{len(answers)}] {tid} ({n_criteria} criteria)...",
               end=" ", flush=True)
 
-        score = score_answer(client, answer, task, judge_model)
+        score = score_answer(client, answer, task, judge_model, provider=provider)
         all_scores.append(score)
 
         with open(output, "a", encoding="utf-8") as f:
